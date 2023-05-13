@@ -3,54 +3,99 @@ const path = require("path");
 const router = express.Router();
 const hotels = require("../data/hotels");
 
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient();
+
 router.use(express.json());
 
-router.get("/hotels", (req, res) => {
-  // res.sendFile(path.join(__dirname, "../templates/about.html"));
-  res.json(hotels);
-});
-router.get("/hotel_details/:slug", (req, res) => {
-  const { slug } = req.params.slug;
-  const data = hotels.find((el) => el.slug === slug);
-  if (data) res.status(200).json(data);
-  else res.status(404).send("Not Found!");
+// get all hotels list
+router.get("/hotels", async (req, res) => {
+  res.json(await prisma.hotels.findMany());
 });
 
-router.put("/hotel/:id", (req, res) => {
-  const { id } = req.params;
-  const { hotel_name, vendor_name } = req.body;
-  const data = hotels.find((el) => el.hotel_id == id);
-  if (id && (hotel_name, vendor_name, data)) {
-    const data = hotels.find((el) => el.hotel_id == id);
-    const index = hotels.findIndex(
-      (obj) =>
-        obj.hotel_name === data.hotel_name &&
-        obj.slug === data.slug &&
-        obj.hotel_id === data.hotel_id &&
-        obj.vendor_name === data.vendor_name
-    );
-    hotels[index].hotel_name = hotel_name;
-    hotels[index].slug = hotel_name.toLowerCase().replace(" ", "_");
-    hotels[index].vendor_name = vendor_name;
-
-    res.status(200).send(data);
-  } else res.status(403).send("Forbidden!!");
-});
-
-router.delete("/hotel/:id", (req, res) => {
+//find single hotel
+router.get("/hotel_details/:id", async (req, res) => {
   const { id } = req.params;
   if (id) {
-    const data = hotels.find((el) => el.hotel_id == id);
-    const index = hotels.findIndex(
-      (obj) =>
-        obj.hotel_name === data.hotel_name &&
-        obj.slug === data.slug &&
-        obj.hotel_id === data.hotel_id &&
-        obj.vendor_name === data.vendor_name
-    );
-    hotels.splice(index, 1);
-    res.status(202).send("Deleted Success!");
+    const findedData = await prisma.hotels.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+    if (findedData) {
+      res.status(200).send(findedData);
+    } else res.status(404).send("Not Found!");
+  } else res.status(403).send("Forbidden!");
+});
+
+// create new hotel
+router.post("/hotel", async (req, res) => {
+  const { hotel_name, vendor_name } = req.body;
+  if (hotel_name && vendor_name) {
+    const data = await prisma.hotels.create({
+      data: {
+        name: hotel_name,
+        slug: hotel_name.toLowerCase().replace(" ", "_"),
+        vendor_name: vendor_name,
+      },
+    });
+    res.status(201).json({
+      message: "Created Successfully",
+      data,
+    });
   } else res.status(403).send("Forbidden!!");
+});
+
+// update existing hotel
+router.put("/hotel/:id", async (req, res) => {
+  const { id } = req.params;
+  const { hotel_name, vendor_name } = req.body;
+  if (id && hotel_name && vendor_name) {
+    const data = await prisma.hotels.update({
+      where: { id: Number(id) },
+      data: {
+        name: hotel_name,
+        slug: hotel_name.toLowerCase().replace(" ", "_"),
+        vendor_name: vendor_name,
+      },
+    });
+    res.status(200).json({
+      message: "Updated Successfully",
+      data,
+    });
+  } else
+    res.status(403).json({
+      message: "Forbidden!!",
+    });
+});
+
+// delete existing hotel
+router.delete("/hotel/:id", async (req, res) => {
+  const { id } = req.params;
+  if (id) {
+    const matchId = await prisma.hotels.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+    if (matchId) {
+      await prisma.hotels.delete({
+        where: {
+          id: Number(id),
+        },
+      });
+      res.status(202).json({
+        message: "Deleted Successfully!",
+      });
+    } else
+      res.status(403).json({
+        message: "Hotel Not Found!",
+      });
+  } else
+    res.status(403).json({
+      message: "Forbidden!!",
+    });
 });
 
 module.exports = router;
