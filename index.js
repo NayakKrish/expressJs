@@ -26,7 +26,7 @@ const userRouter = require("./routes/userRoutes");
 
 app.use(express.static(path.join(__dirname, "static")));
 app.use("/", require(path.join(__dirname, "routes/hotelRoutes.js")));
-app.use("/", userRouter);
+app.use("/user", userRouter);
 
 app.listen(port, () => {
   console.log(`Hotel app listening on port http://localhost:${port}`);
