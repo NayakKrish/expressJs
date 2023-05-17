@@ -13,6 +13,10 @@ app.use("/user", userRouter);
 app.use("/notes", notesRouter);
 app.use(cors());
 
+app.use("/", (req, res) => {
+  res.send("Express API's by Krish");
+});
+
 app.listen(port, () => {
   console.log(`Hotel app listening on port http://localhost:${port}`);
 });
