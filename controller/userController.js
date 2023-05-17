@@ -2,7 +2,6 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = "usersApi";
 
 const signup = async (req, res) => {
   const { username, email, password } = req.body;
@@ -25,7 +24,10 @@ const signup = async (req, res) => {
       },
     });
 
-    const token = jwt.sign({ email: result.email, id: result.id }, SECRET_KEY);
+    const token = jwt.sign(
+      { email: result.email, id: result.id },
+      process.env.SECRET_KEY
+    );
 
     res.status(201).json({
       user: result,
@@ -53,7 +55,7 @@ const signin = async (req, res) => {
     }
     const token = jwt.sign(
       { email: existingUser.email, id: existingUser.id },
-      SECRET_KEY
+      process.env.SECRET_KEY
     );
     res.status(200).json({
       user: existingUser,

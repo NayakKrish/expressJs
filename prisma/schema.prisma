@@ -20,3 +20,10 @@ model users {
   email    String @unique(map: "email") @db.VarChar(255)
   password String @db.VarChar(255)
 }
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client
+model notes {
+  id          Int    @id @default(autoincrement())
+  title       String @db.VarChar(255)
+  description String @db.VarChar(255)
+}
